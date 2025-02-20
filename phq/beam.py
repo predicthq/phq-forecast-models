@@ -4,7 +4,7 @@ from io import StringIO
 
 import pandas as pd
 from predicthq import Client
-from predicthq.endpoints.v1.beam.schemas import CreateAnalysisResponse
+from predicthq.endpoints.v1.beam.schemas import Analysis
 
 
 logging.basicConfig(level=logging.INFO)
@@ -19,7 +19,7 @@ def run_beam_analysis(
     access_token: str,
     industry: str | None = None,
     sleep: int = 5,
-) -> CreateAnalysisResponse:
+) -> Analysis | None:
     # create the PredictHQ client
     phq = Client(access_token=access_token)
 
@@ -47,6 +47,18 @@ def run_beam_analysis(
 
         analysis = phq.beam.analysis.get(analysis_id=analysis_id)
         completed = analysis.processing_completed.feature_importance
+
+        # check if the analysis failed
+        error_code = analysis.readiness_checks.error_code
+        validation_response = analysis.readiness_checks.validation_response
+
+        if error_code:
+            log.error(f"Analysis {analysis_id} failed with error code {error_code}")
+
+            if validation_response:
+                log.error(f"Error message: {validation_response.get('error_message')}")
+
+            return None
 
     # assign the analysis id to the analysis if it is not already set
     if not hasattr(analysis, "analysis_id") or analysis.analysis_id is None:
