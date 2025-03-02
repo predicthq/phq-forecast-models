@@ -4,3 +4,4 @@ predicthq
 scikit-learn
 xgboost
 plotly-express
+cloudpickle
