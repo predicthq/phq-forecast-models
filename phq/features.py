@@ -96,8 +96,13 @@ def prepare_event_features(analysis_id: str, access_token: str):
     end_date = date_range.end
 
     features = _get_event_features(phq_client, analysis_id, start_date, end_date)
-    features_df = pd.DataFrame(features)
-    features_df["date"] = pd.to_datetime(features_df["date"])
+    if len(features) > 0:
+        features_df = pd.DataFrame(features)
+        features_df["date"] = pd.to_datetime(features_df["date"])
+    else:
+        # Create a DataFrame with just the 'date' column from start_date to end_date
+        date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+        features_df = pd.DataFrame({"date": date_range})
 
     return features_df
 
@@ -113,7 +118,13 @@ def prepare_forecast_features(
     end_date = max_date + pd.Timedelta(days=window_size)
 
     features = _get_event_features(phq_client, analysis_id, start_date, end_date)
-    features_df = pd.DataFrame(features)
+    if len(features) > 0:
+        features_df = pd.DataFrame(features)
+        features_df["date"] = pd.to_datetime(features_df["date"])
+    else:
+        # Create a DataFrame with just the 'date' column from start_date to end_date
+        date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+        features_df = pd.DataFrame({"date": date_range})
 
     train_and_future_df = pd.concat([demand_df, features_df], ignore_index=True)
     train_and_future_df["date"] = pd.to_datetime(train_and_future_df["date"])
